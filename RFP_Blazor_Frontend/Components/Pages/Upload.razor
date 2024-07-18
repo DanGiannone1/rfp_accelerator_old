@@ -1,0 +1,251 @@
+﻿@page "/upload"
+@using RFP_Blazor_Frontend.Helper;
+@using System.Timers
+@using System.Text.Json
+@implements IDisposable
+
+@inject RfpClient rfpclient
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" >
+    <MudGrid Justify="Justify.Center" Class="main-grid">
+        <!-- Left Side: List of Available RFPs -->
+        <MudItem xs="12">
+            <MudStack>
+                <MudPaper Class="pa-4" Elevation="12">
+                    <MudStack Row="true">
+                        <MudAvatar Size="Size.Large">
+                            <MudImage Src="images/businessman-hand-touchsample.jpg"></MudImage>
+                        </MudAvatar>
+                        <MudStack Justify="Justify.Center" Spacing="0">
+                            <MudText Typo="Typo.body1">RFP Upload</MudText>
+                            <MudText Typo="Typo.body2">Select FRP To Upload Below</MudText>
+                        </MudStack>
+                    </MudStack>
+                </MudPaper>
+                <MudPaper Class="pa-4" Elevation="12">
+                        <MudStack Justify="Justify.FlexEnd" Spacing="4">
+                            <MudText Typo="Typo.h5">Results</MudText>
+                            <MudSwitch @bind-Value="@PollforStatus_Switch" Label="Poll for Status" Color="Color.Success" />
+                            <MudButton OnClick="@OnClickClearResults" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(statusUpdates.Count == 0)">Clear Results</MudButton>
+                            <MudDivider Class="pa-4" />
+                        </MudStack>
+                        <div id="another_unique_identifier" class="ma-0" style="max-height:500px;overflow: auto;">
+                            <MudStack>
+                                Results Displayed here
+                            <div class="alert alert-info">
+                                @if (statusUpdates != null)
+                                {
+                                    foreach (var item in statusUpdates)
+                                    {
+                                      @item <br />
+                                    }
+                                }
+                                @* @this.Message *@
+                            </div>
+                                @*  @foreach (var item in UserService.UserDetails)
+                                {
+                                <UserResults UserInfo="@item" />
+                                } *@
+                            </MudStack>
+                        </div>
+                </MudPaper>
+                <MudPaper Class="pa-4" Elevation="12">
+                    <MudStack>
+                        <MudToolBar DisableGutters="true" Class="gap-4 z-30">
+                            <MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles">
+                                <ButtonTemplate>
+                                    <MudButton HtmlTag="label"
+                                               Variant="Variant.Outlined"
+                                               Color="Color.Primary"
+                                               StartIcon="@Icons.Material.Filled.CloudUpload"
+                                               for="@context.Id">
+                                        Select File
+                                    </MudButton>
+                                </ButtonTemplate>
+                            </MudFileUpload>
+                            <MudText Typo="Typo.h6">@selectedFile</MudText>
+                        </MudToolBar>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="UploadFile">Upload</MudButton>
+                    </MudStack>
+                </MudPaper> 
+            </MudStack>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private List<string>? _listOfRfps { get; set; }
+    public string? SelectedRfp { get; set; }
+    private System.Timers.Timer _timer = new System.Timers.Timer(1000);
+    private Task _refreshTask = Task.CompletedTask;
+    private int timerCount = 0;
+    private string? Message ;
+    private List<string>? statusUpdates = new List<string>();
+
+    List<string> RFPs = new List<string>();
+    IList<IBrowserFile> files = new List<IBrowserFile>();
+    string selectedFile = "No file selected!";
+
+    private bool _pollForStatusSwitch = false;
+
+    public bool PollforStatus_Switch
+    {
+        get => _pollForStatusSwitch;
+        set
+        {
+            _pollForStatusSwitch = value;
+            if (value == true)
+            {
+                // Turn on the Polling Timer
+                Console.WriteLine($"Turn on the Polling Timer");
+                if (statusUpdates != null)
+                {
+                    statusUpdates.Clear();
+                }
+                StartTimer();
+                this.Message = $"Turn on the Polling Timer";
+            }
+            else
+            {
+                // Turn off the Polling Timer
+                Console.WriteLine($"Turn off the Polling Timer");
+                StopTimer();
+                this.Message = $"Turn off the Polling Timer";
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _timer.AutoReset = true;
+            _timer.Elapsed += this.OnTimerElapsed;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting Artifact from endpoint: {ex.Message}");
+            // Handle or log the exception as needed
+        }
+    }
+
+    private void UploadFiles(IBrowserFile file)
+    {
+        files.Clear();
+        files.Add(file);
+        selectedFile = file.Name;
+        //TODO upload the files to the server
+    }
+
+    private void StartTimer()
+    {
+        if (!_timer.Enabled)
+        {
+            timerCount = 0; // Reset the counter
+            _timer.Start();
+        }
+    }
+
+    private void StopTimer()
+    {
+        if (_timer.Enabled)
+        {
+            timerCount = 0; // Reset the counter
+            _timer.Stop();
+        }
+    }
+
+    private void OnTimerElapsed(object? sender, ElapsedEventArgs e)
+      => _refreshTask = InvokeAsync(this.RefreshData);
+
+    private async Task RefreshData()
+    {
+        timerCount ++;
+        this.Message = $@"{DateTime.Now.ToLongTimeString()} Counter:{timerCount}";
+        var result = await rfpclient.GetStatusAsync();
+        statusUpdates = JsonSerializer.Deserialize<List<string>>(result);
+        // this.Message = await rfpclient.GetStatusAsync();
+        this.StateHasChanged();
+        // return Task.CompletedTask;
+    }
+
+    public void Dispose()
+        => _timer.Elapsed -= this.OnTimerElapsed;
+
+
+    private async Task OnClickCheckResults()
+    {
+        // UserService.UserDetails.Clear();
+        await Task.Delay(10);
+    }
+    private async Task OnClickClearResults()
+    {
+        if (statusUpdates != null)
+        {
+            statusUpdates.Clear();
+        }
+
+        await Task.Delay(1);
+    }
+
+    private async Task OnClickRfp(string clickedItem)
+    {
+        try
+        {
+            // Do something with the clickedItem value
+            this.SelectedRfp = clickedItem;
+            Console.WriteLine($"RFP Item clicked: {clickedItem}");
+
+            // Assuming rfpclient is a service injected into the component
+            // var rfpResponse = await rfpclient.SelectRfpAsync(clickedItem);
+            // Console.WriteLine($"SelectRfp Called: response {rfpResponse}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error selecting RFP: {ex.Message}");
+            // Handle or log the exception as needed
+        }
+        await Task.Delay(1);
+    }
+
+    private async Task UploadFile()
+    {
+        try
+        {
+            if (files.Count == 0)
+            {
+                // Handle case where no file is selected
+                return;
+            }
+
+            var filename = files[0].Name.Replace(" ", "_");
+            var response = await rfpclient.UploadFileAsync2(files[0]);
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Handle successful upload
+                Console.WriteLine("File uploaded successfully!");
+                if (statusUpdates != null)
+                {
+                    statusUpdates.Add($@"File: {filename} uploaded successfully!");
+                }
+            }
+            else
+            {
+                // Handle failed upload
+                if (statusUpdates != null)
+                {
+                    statusUpdates.Add($@"File: {filename} upload failed!");
+                    Console.WriteLine($"File upload failed with status code: {response.StatusCode}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error uploading file: {ex.Message}");
+            // Handle or log the exception as needed
+        }
+    }
+
+}

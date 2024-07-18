@@ -1,0 +1,10 @@
+
+openai
+fastapi 
+uvicorn
+python-dotenv
+azure-cosmos
+azure-storage-blob
+# azure-ai-formrecognizer
+azure-ai-formrecognizer==3.3.1
+azure-ai-documentintelligence

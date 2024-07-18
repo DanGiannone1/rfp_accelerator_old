@@ -1,0 +1,100 @@
+﻿@page "/analyzer"
+@using RFP_Blazor_Frontend.Helper;
+@inject RfpClient rfpclient
+
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mx-auto my-5">
+    <MudGrid Justify="Justify.Center" Class="main-grid">
+        <MudItem xs="12">
+            <MudPaper Class="pa-4" Elevation="12">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                    <MudAvatar Size="Size.Large">
+                        <MudImage Src="images/businessman-hand-touchsample.jpg"></MudImage>
+                    </MudAvatar>
+                    <MudStack Justify="Justify.Center" Spacing="0">
+                        <MudText Typo="Typo.body1">RFP Analyzer</MudText>
+                        <MudText Typo="Typo.body2">Ask questions about the RFP</MudText>
+                    </MudStack>
+                    <div style="margin-left:auto">
+                        <MudSelect Style="width: 300px;" Class="et-select-input align-right" T="string" @bind-Value="SelectedRFP" Label="Select RFP" >
+                            @if (rfpclient.ListOfRfps != null) {
+                            foreach (var item in rfpclient.ListOfRfps)
+                                {
+                                    <MudSelectItem Value="@item"></MudSelectItem>
+                                }
+                            }
+                        </MudSelect>
+                    </div>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <!-- Bottom: AI Response and User Prompt -->
+        <MudItem xs="12" >
+            <ChatNew />
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private bool _isVisible = false;
+    private string? selectedRFP;
+    public string? SelectedRFP
+    {
+        get => selectedRFP;
+        set
+        {
+            if (value != selectedRFP)
+            {
+                selectedRFP = value;
+                if (rfpclient != null)
+                {
+                    rfpclient.SelectedRFP = value!;
+                }
+            }
+        }
+    }
+
+    private void ToggleVisibility()
+    {
+        _isVisible = !_isVisible;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (rfpclient.NewUpload) // new RFP was uploaded need to refresh the list
+            {
+                await rfpclient.GetRfpsAsync();
+                rfpclient.NewUpload = false; // set to false as we updated the list with the new item
+            }
+            SelectedRFP = rfpclient.SelectedRFP;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting Rfps from endpoint: {ex.Message}");
+            // Handle or log the exception as needed
+        }
+    }
+    
+    private async Task OnClickRfp(string clickedItem)
+    {
+        try
+        {
+            // Do something with the clickedItem value
+            this.SelectedRFP = clickedItem;
+            rfpclient.SelectedRFP = this.SelectedRFP;
+            Console.WriteLine($"RFP Item clicked: {clickedItem}");
+
+            // Assuming rfpclient is a service injected into the component
+            var rfpResponse = await rfpclient.SelectRfpAsync(clickedItem);
+            Console.WriteLine($"SelectRfp Called: response {rfpResponse}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error selecting RFP: {ex.Message}");
+            // Handle or log the exception as needed
+        }
+
+    }
+}

@@ -1,0 +1,110 @@
+﻿@page "/requirements"
+@using RFP_Blazor_Frontend.Helper;
+@inject RfpClient rfpclient
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mx-auto my-5">
+    <MudGrid Justify="Justify.Center" Class="main-grid">
+        <!-- Left Side: List of Available RFPs -->
+        <MudItem xs="12">
+            <MudPaper Class="pa-4" Elevation="12">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                    <MudAvatar Size="Size.Large">
+                        <MudImage Src="images/businessman-hand-touchsample.jpg"></MudImage>
+                    </MudAvatar>
+                    <MudStack Justify="Justify.Center" Spacing="0">
+                        <MudText Typo="Typo.body1">RFP Requirements</MudText>
+                        <MudText Typo="Typo.body2">Select Sections, Extract Requirments and Download</MudText>
+                    </MudStack>
+                    <div style="margin-left:auto">
+                        <MudSelect Style="width: 300px;" Class="et-select-input align-right" T="string" @bind-Value="SelectedRFP" Label="Select RFP">
+                            @if (rfpclient.ListOfRfps != null)
+                            {
+                                foreach (var item in rfpclient.ListOfRfps)
+                                {
+                                    <MudSelectItem Value="@item"></MudSelectItem>
+                                }
+                            }
+                        </MudSelect>
+                    </div>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="3">
+            <MudPaper Class="pa-4 paper-container min-width-paper" Style="height:50vh;" Elevation="12">
+                Sections
+            </MudPaper>
+        </MudItem>
+
+        <!-- Center: Status Window -->
+        <MudItem xs="6">
+            <MudPaper Class="pa-4 paper-container min-width-paper" Style="height:50vh;overflow: auto;" Elevation="12">
+                <div style="width: 100%; height: 100%;">
+                    <embed src="https://stgrfpdemo.blob.core.windows.net/rfp/MD_RFP_SUBSET_1.pdf" style="width: 100%; height: 100%;" />
+               </div>
+            </MudPaper>
+        </MudItem>
+
+        <!-- Right Side: Artifacts -->
+        <MudItem xs="3">
+            <MudPaper Class="pa-4 paper-container" Style="height:50vh" Elevation="12">
+                Requirements
+            </MudPaper>
+        </MudItem>
+
+        <!-- Bottom: AI Response and User Prompt -->
+        <MudItem xs="12">
+            <MudStack Row="true">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Style="min-height: 40px;" FullWidth="true" OnClick="OnClickExtractRequirements">Extract Requirements</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Style="min-height: 40px;" FullWidth="true" OnClick="OnClickDownload">Download</MudButton>
+            </MudStack>
+        </MudItem>
+
+    </MudGrid>
+</MudContainer>
+@code {
+    private string? selectedRFP;
+    public string? SelectedRFP
+    {
+        get => selectedRFP;
+        set
+        {
+            if (value != selectedRFP)
+            {
+                selectedRFP = value;
+                if (rfpclient != null)
+                {
+                    rfpclient.SelectedRFP = value!;
+                }
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (rfpclient.NewUpload) // new RFP was uploaded need to refresh the list
+            {
+                await rfpclient.GetRfpsAsync();
+                rfpclient.NewUpload = false; // set to false as we updated the list with the new item
+            }
+            SelectedRFP = rfpclient.SelectedRFP;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting Rfps from endpoint: {ex.Message}");
+            // Handle or log the exception as needed
+        }
+    }
+
+    private void OnClickExtractRequirements()
+    {
+        Task.Delay(1000);
+    }
+    private void OnClickDownload()
+    {
+        Task.Delay(1000);
+    }
+
+}

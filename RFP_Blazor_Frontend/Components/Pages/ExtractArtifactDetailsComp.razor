@@ -1,0 +1,90 @@
+﻿@using Utils.Helpers;
+@using RFP_Blazor_Frontend.Helper;
+@using RFP_Blazor_Frontend.Models;
+@inject RfpClient rfpclient
+
+<MudStack>
+    <MudSpacer />
+    <MudStack>
+        <MudText Class="pa-5 " Style="max-width: 800px;font-style: normal;font-weight: 400;font-size: 14px;line-height: 20px;color: #323130;margin: 11px;white-space: normal;">
+            @if (firstTime)
+            {
+                @Constants.SampleAIResponse
+            }
+            else
+            {
+                @StatusText
+            }
+        </MudText>
+        <MudSpacer />
+        <MudText Class="pa-2" Style="font-style: normal;font-weight: 400;font-size: 12px;line-height: 16px;color: #707070;">
+            @if (firstTime)
+            {
+                @Constants.SampleArtifactsText
+            }
+            else
+            {
+                @ArtifactSelectedText
+            }
+        </MudText>
+    </MudStack>
+</MudStack>
+@code {
+    bool firstTime = true;
+    private System.Timers.Timer? timer;
+    public string? StatusText { get; set; }
+    public string? ArtifactSelectedText { get; set; }
+
+    // Method to clear content
+    public void ClearContent()
+    {
+        StatusText = string.Empty;
+        ArtifactSelectedText = string.Empty;
+        firstTime = false;
+        StateHasChanged();
+    }
+    public void ClearStatus()
+    {
+        StatusText = string.Empty;
+        firstTime = false;
+        StateHasChanged();
+    }
+
+    public void StartTimer()
+    {
+        // Create a new timer with an interval of 5 seconds (5000 milliseconds)
+        timer = new System.Timers.Timer(1000);
+        timer.Elapsed += async (sender, e) => await PollEndpoint();
+        timer.AutoReset = true;
+        timer.Start();
+        StateHasChanged();
+    }
+
+    private async Task PollEndpoint()
+    {
+        try
+        {
+            var checkstatus = await rfpclient.GetStatusAsync();
+            this.StatusText = checkstatus;
+            if (checkstatus.Contains("RFP upload completed successfully"))
+            {
+                // Stop the timmer
+                await Task.Delay(2000);
+                if (timer != null)
+                {
+                    timer.Stop();
+
+                    this.StatusText = "";
+                    StateHasChanged();
+                }
+            }
+
+
+        }
+        catch (Exception ex)
+        {
+            // Handle exceptions
+            Console.WriteLine($"Error polling status endpoint: {ex.Message}");
+        }
+    }
+}

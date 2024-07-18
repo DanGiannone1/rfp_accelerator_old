@@ -1,0 +1,114 @@
+﻿@using RFP_Blazor_Frontend.Helper;
+@page "/rfppage"
+@inject RfpClient rfpclient
+@rendermode InteractiveServer
+<style>
+    .clearChatBroom {
+        box-sizing: border-box;
+        margin-top: 55px;
+        padding: 8px;
+        width: 40px;
+        height: 40px;
+        left: 12px;
+        top: 66px;
+        color: #FFFFFF;
+        border: 1px solid #D1D1D1;
+        border-radius: 20px;
+        z-index: 1;
+    }
+
+    .paper-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .button-container {
+        padding: 20px 0 0;
+    }
+
+    .min-width-paper {
+        min-width: 300px; /* Set your desired minimum width here */
+    }
+
+</style>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mx-auto my-5">
+    <MudGrid Justify="Justify.Center" Class="main-grid">
+        <!-- Left Side: List of Available RFPs -->
+        
+        <MudItem xs="3" >
+            <MudPaper Class="pa-4 paper-container min-width-paper" Style="height:50vh;" Elevation="12">
+                <AvailRFPs />
+            </MudPaper>
+        </MudItem>
+
+        <!-- Center: Status Window -->
+        <MudItem xs="6" >
+            <MudPaper Class="pa-4 paper-container min-width-paper" Style="height:50vh;overflow: auto;" Elevation="12"> 
+                <StatusComponent @ref="statusComponentRef" />
+                <MudDivider />
+                <ExtractArtifactDetailsComp @ref="extractArtifactDetailsComponentRef" />
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Style="min-height: 40px;" FullWidth="true" OnClick="ClearWindow">Clear Window</MudButton>
+            </MudPaper>
+        </MudItem>
+
+        <!-- Right Side: Artifacts -->
+        <MudItem xs="3" >
+            <MudPaper Class="pa-4 paper-container"  Style="height:50vh" Elevation="12">
+                @* <ArifactComp /> *@
+            </MudPaper>
+        </MudItem>
+
+        <!-- Bottom: AI Response and User Prompt -->
+        <MudItem xs="12">
+               <Chat />
+        </MudItem>
+
+    </MudGrid>
+</MudContainer>
+
+@code
+{
+    private StatusComponent? statusComponentRef;
+    public List<string>? listOfRfps;
+    private ExtractArtifactDetailsComp? extractArtifactDetailsComponentRef;
+    string selectedfile = "";
+    IList<IBrowserFile> files = new List<IBrowserFile>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        // listOfRfps = await rfpclient.GetRfpsAsync();         
+        // Simulate loading data asynchronously (replace with actual data fetching logic)
+        await Task.Delay(1000); // Simulate loading delay
+
+        // Load data or perform initialization
+        // items = new List<string> { "Item 1", "Item 2", "Item 3" };
+
+    }
+
+    private void UploadFiles(IBrowserFile file)
+    {
+        files.Add(file);
+        selectedfile = file.Name;
+        StateHasChanged();
+        //TODO upload the files to the server
+    }
+
+    // Method to clear the content
+    private void ClearWindow()
+    {
+        if (statusComponentRef != null && extractArtifactDetailsComponentRef != null)
+        {
+            statusComponentRef.ClearContent();
+            extractArtifactDetailsComponentRef.ClearContent();
+            StateHasChanged();
+        }
+        // Reset content of StatusComponent (if needed, call methods on statusComponentRef)
+        // Example: statusComponentRef.ClearContent();
+
+        // Reset content of MudText (if needed, update state variables)
+        // Example: textContent = string.Empty;
+    }
+}

@@ -1,0 +1,37 @@
+﻿@using Utils.Helpers;
+@attribute [StreamRendering]
+@rendermode InteractiveServer
+<style>
+    .text-with-new-lines {
+        white-space: pre-wrap;
+    }
+
+</style>
+
+<MudStack>
+    <MudSpacer />
+    <MudStack>
+        <MudPaper Class="pa-4" Elevation="12" Style="margin-bottom:20px;margin-left:20vh;width: fit-content;">
+            <MudText Class="pa-4" Style="max-width: 1000px;font-style: normal;font-weight: 400;font-size: 14px;line-height: 20px;color: #323130;margin: 11px;white-space: normal;">               
+                <div style="white-space: pre-wrap;">
+                    <span style="white-space: pre-line">@StatusText</span>
+                </div>
+            </MudText>
+            <MudSpacer />
+            <MudText Class="pa-4" Style="font-style: normal;font-weight: 400;font-size: 12px;line-height: 16px;color: #707070;">
+                AI-generated content may be incorrect
+            </MudText>
+        </MudPaper>
+    </MudStack>
+</MudStack>
+@code {
+    [Parameter]
+    public string? StatusText { get; set; }
+
+    // Method to clear content
+    public void ClearContent()
+    {
+        StatusText = string.Empty;
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,70 @@
+﻿@using RFP_Blazor_Frontend.Helper;
+@using RFP_Blazor_Frontend.Models;
+@inject RfpClient rfpclient
+@rendermode InteractiveServer
+
+<MudList Clickable="true" Style="height:45vh; overflow: auto;">
+    <MudListSubheader>
+        Artifacts
+    </MudListSubheader>
+    @if (_listOfArtifacts != null)
+    {
+        @foreach (var item in _listOfArtifacts)
+        {
+            <MudListItem Icon="@Icons.Material.Filled.Article" OnClick="@(() => OnClickArtifact(item))">
+                @item
+            </MudListItem>
+        }
+    }
+</MudList>
+<div class="button-container">
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true">Download</MudButton>
+</div>
+
+@code
+{
+    private List<string>? _listOfArtifacts { get; set; }
+    public string? SelectedArtifact { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _listOfArtifacts = await rfpclient.GetArtifactsAsync();
+            // Simulate loading data asynchronously (replace with actual data fetching logic)
+            //await Task.Delay(1000); // Simulate loading delay
+
+            // Load data or perform initialization
+            // items = new List<string> { "Item 1", "Item 2", "Item 3" };
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting Artifact from endpoint: {ex.Message}");
+            // Handle or log the exception as needed
+        }
+
+
+    }
+    
+    private async Task OnClickArtifact(string clickedItem)
+    {
+        try
+        {
+            // Do something with the clickedItem value
+            this.SelectedArtifact = clickedItem;
+            Console.WriteLine($"Artifact Item clicked: {clickedItem}");
+
+            // Assuming rfpclient is a service injected into the component
+            var artifactResponse = await rfpclient.GetArtifactDataAsync(clickedItem);
+            Console.WriteLine($"GetArtifactDataAsync Called: response {artifactResponse}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error ArtifactComp GetArtifactDataAsync: {ex.Message}");
+            // Handle or log the exception as needed
+        }
+
+    }
+}
+

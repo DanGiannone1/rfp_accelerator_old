@@ -1,0 +1,26 @@
+﻿@using Utils.Helpers;
+
+<MudPaper Elevation="12" Style="background: #EDF5FD">
+    <MudText Class="pa-5 ">
+        @if (firstTime)
+        {
+            @Constants.SampleData
+        }
+        else
+        {
+            @StatusText
+        }
+    </MudText>
+</MudPaper>
+@code {
+    bool firstTime = true;
+    public string? StatusText { get; set; }
+
+    // Method to clear content
+    public void ClearContent()
+    {
+        StatusText = string.Empty;
+        firstTime = false;
+        StateHasChanged();
+    }
+}
