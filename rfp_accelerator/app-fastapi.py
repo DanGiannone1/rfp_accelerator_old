@@ -34,8 +34,8 @@ COSMOS_DATABASE_ID = os.getenv("COSMOS_DATABASE_ID")
 COSMOS_CONTAINER_ID = os.getenv("COSMOS_CONTAINER_ID")
 
 # Azure Blob Storage configuration
-AZURE_CONNECTION_STRING = os.getenv("RFP_STORAGE_CONNECTION_STRING2")
-AZURE_CONTAINER_NAME = os.getenv("RFP_AZURE_CONTAINER_NAME2")
+AZURE_CONNECTION_STRING = os.getenv("RFP_STORAGE_CONNECTION_STRING")
+AZURE_CONTAINER_NAME = os.getenv("RFP_AZURE_CONTAINER_NAME")
 
 # Initialize the BlobServiceClient
 blob_service_client = BlobServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
